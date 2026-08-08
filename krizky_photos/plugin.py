@@ -72,7 +72,7 @@ class PhotosPlugin:
         """Add 'fetch photos' and 'build photos' commands to the krizky CLI."""
         from krizky.config import ConfigError, load_config
 
-        @cli.command("fetch-photos", name="fetch-photos")
+        @cli.command("fetch-photos")
         @click.pass_context
         def _fetch_photos(ctx: click.Context) -> None:
             """Fetch photo file list from Google Drive and save to sources/photos/gdrive_metadata.json."""
@@ -92,7 +92,7 @@ class PhotosPlugin:
                 click.echo(click.style(f"ERROR: {exc}", fg="red"))
                 raise SystemExit(1) from None
 
-        @cli.command("build-photos", name="build-photos")
+        @cli.command("build-photos")
         @click.option("--force", is_flag=True, default=False, help="Reprocess all photos, ignore change detection.")
         @click.option("--dry-run", is_flag=True, default=False, help="Show what would happen without downloading or uploading.")
         @click.pass_context
