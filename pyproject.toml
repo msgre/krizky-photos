@@ -21,6 +21,9 @@ photos = "krizky_photos.plugin:plugin"
 [tool.hatch.build.targets.wheel]
 packages = ["krizky_photos"]
 
+[tool.uv.sources]
+krizky = { git = "https://github.com/msgre/krizky.git" }
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",
