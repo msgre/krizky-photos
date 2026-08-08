@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "krizky-photos"
+version = "0.1.0"
+description = "Photo processing plugin for krizky static site generator"
+requires-python = ">=3.12"
+dependencies = [
+    "krizky>=0.1",
+    "google-api-python-client>=2.0",
+    "google-auth>=2.0",
+    "Pillow>=10.0",
+    "boto3>=1.28",
+]
+
+[project.entry-points."krizky"]
+photos = "krizky_photos.plugin:plugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["krizky_photos"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
