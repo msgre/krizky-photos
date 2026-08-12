@@ -9,6 +9,7 @@ from pathlib import Path
 import click
 
 from krizky.hooks import hookimpl
+from krizky_photos.focal import FocalPointsError, load_focal_points
 
 _log = logging.getLogger(__name__)
 
@@ -18,8 +19,12 @@ class PhotosPlugin:
 
     Hooks:
     - prepare_jinja2_environment: registers photos() global and photo_contexts
+    - inject_head: exposes focal_points to browser JS as ``window.krizkyPhotos``
     - register_commands: adds 'fetch photos' and 'build photos' CLI commands
     """
+
+    def __init__(self) -> None:
+        self._focal_points: dict = {}
 
     # ------------------------------------------------------------------
     # prepare_jinja2_environment
@@ -34,12 +39,12 @@ class PhotosPlugin:
         env.globals["photo_contexts"] = photos_cfg.get("contexts", {}) if photos_cfg else {}
 
         if not photos_cfg:
+            self._focal_points = {}
             return
 
         sources_output = (config_dir / config["sources"]["output"]).resolve()
         photos_dir = sources_output / "photos"
         cf_meta_path = photos_dir / "cf_metadata.json"
-        fp_path = photos_dir / "focal_points.json"
 
         if not cf_meta_path.exists():
             _log.warning(
@@ -48,20 +53,35 @@ class PhotosPlugin:
             )
         cf_meta = json.loads(cf_meta_path.read_text(encoding="utf-8")) if cf_meta_path.exists() else {}
 
-        if not fp_path.exists():
-            _log.warning(
-                "Focal points file not found: %s — focal_point will be None for all photos",
-                fp_path,
-            )
-        focal_points = json.loads(fp_path.read_text(encoding="utf-8")) if fp_path.exists() else {}
+        try:
+            self._focal_points = load_focal_points(photos_cfg, config_dir, sources_output)
+        except FocalPointsError as exc:
+            raise click.ClickException(str(exc)) from exc
 
         env.globals["photos"] = PhotoContext(
             cf_meta=cf_meta,
-            focal_points=focal_points,
+            focal_points=self._focal_points,
             base_url=photos_cfg.get("base_url", ""),
             formats=photos_cfg.get("formats", []),
             sizes=photos_cfg.get("sizes", []),
         )
+
+    # ------------------------------------------------------------------
+    # inject_head — expose focal_points to browser JS
+    # ------------------------------------------------------------------
+
+    @hookimpl
+    def inject_head(self, page_cfg, config):
+        """Inline focal_points as ``window.krizkyPhotos.focalPoints`` for JS consumers.
+
+        Enables plugins like krizky-filters to keep ``object-position`` correct
+        when they re-render photos on the client after filtering. No-op when
+        there are no focal points.
+        """
+        if not self._focal_points:
+            return None
+        payload = json.dumps({"focalPoints": self._focal_points}, ensure_ascii=False)
+        return f'<script>window.krizkyPhotos={payload};</script>'
 
     # ------------------------------------------------------------------
     # register_commands

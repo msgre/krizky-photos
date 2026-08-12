@@ -8,8 +8,6 @@ No external dependencies — works purely from the committed JSON metadata.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 
 class PhotoContext:
     """Callable that returns photo data for a given row number.
@@ -21,6 +19,10 @@ class PhotoContext:
           {% from "_picture.html" import picture %}
           {{ picture(imgs.primary, sizes="330px", alt=record.nazev, size="thumb") }}
         {% endif %}
+
+    ``focal_points`` is expected to be already normalized — keys are base names
+    without extension (``"047"``, ``"047-1"``). Normalization + duplicate/legacy
+    warnings live in :func:`krizky_photos.focal.load_focal_points`.
     """
 
     def __init__(
@@ -32,12 +34,16 @@ class PhotoContext:
         sizes: list[dict],
     ) -> None:
         self._cf_meta = cf_meta
-        # Normalize focal_points keys: strip file extension if present ("047.jpg" → "047").
-        self._focal_points = {Path(k).stem: v for k, v in focal_points.items()}
+        self._focal_points = focal_points
         self._base_url = base_url.rstrip("/")
         # Only non-JPEG formats go into <source> elements; JPEG is the <img> fallback.
         self._source_formats = [f for f in formats if f["format"] != "jpg"]
         self._sizes = sizes
+
+    @property
+    def focal_points(self) -> dict:
+        """Normalized focal_points dict, exposed for injection into the page."""
+        return self._focal_points
 
     def __call__(self, row_number) -> dict:
         """Return photo data dict for *row_number*.

@@ -136,7 +136,7 @@ Použij pojmenované kontexty definované v `sources.photos.contexts`:
 
 ## Ohniska fotek
 
-Vytvoř soubor `sources/photos/focal_points.json` pro ovládání `object-position` u ořezaných obrázků:
+Ohniska řídí `object-position` u ořezaných obrázků. Soubor je JSON dict `{base_name: "X% Y%"}`:
 
 ```json
 {
@@ -145,7 +145,27 @@ Vytvoř soubor `sources/photos/focal_points.json` pro ovládání `object-positi
 }
 ```
 
-Klíče jsou základní názvy bez přípony (`"007"`, nikoli `"007.jpg"`). Soubor se načítá při buildu a je commitnutý do repozitáře.
+Klíče jsou základní názvy bez přípony (`"007"`, nikoli `"007.jpg"`). Legacy klíče s příponou plugin akceptuje, ale při načítání vypíše warning — postupně je přejmenuj.
+
+### Cesta k souboru
+
+Default: `<sources.output>/photos/focal_points.json`.
+
+Chceš-li mít ohniska ve verzovaném adresáři projektu (mimo `sources/`, který je typicky v `.gitignore`), zadej vlastní cestu do configu — je relativní k `config.yaml`:
+
+```yaml
+sources:
+  photos:
+    focal_points: ./data/focal_points.json
+```
+
+- Pokud je `focal_points` zadaný a soubor **neexistuje** (nebo je nečitelný JSON) → build spadne s chybou.
+- Pokud `focal_points` v configu **není** a default soubor chybí → jen warning a všechny fotky budou bez `focal_point`.
+
+### Aplikace v šablonách
+
+- **SSR renderování**: makro `_picture.html` čte `photo.focal_point` a generuje `<img style="object-position:...">` automaticky.
+- **JS klonování (krizky-filters)**: plugin injektuje focal_points jako `window.krizkyPhotos.focalPoints` do `<head>`. Kompatibilní JS runtime (např. krizky-filters) tuto mapu použije pro nastavení `style.objectPosition` na dynamicky vytvářených `<img>` elementech.
 
 ## Požadavky
 

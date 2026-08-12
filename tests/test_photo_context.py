@@ -143,14 +143,6 @@ def test_photo_dict_avif_srcset_in_sources():
     assert "007_big.avif" in avif_source["srcset"]
 
 
-def test_focal_point_key_with_extension():
-    """Klíč v focal_points.json s příponou ('047.jpg') se normalizuje na '047'."""
-    cf = {"047": {"big": {"w": 1600, "h": 1200}}}
-    fp = {"047.jpg": "30% 70%"}
-    photo = _ctx(cf, fp)(47)["primary"]
-    assert photo["focal_point"] == "30% 70%"
-
-
 def test_photo_dict_focal_point_present():
     cf = {"007": {"big": {"w": 1600, "h": 1200}}}
     fp = {"007": "30% 70%"}
