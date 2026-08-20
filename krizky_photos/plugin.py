@@ -7,9 +7,9 @@ import logging
 from pathlib import Path
 
 import click
-
 from krizky.hooks import hookimpl
-from krizky_photos.focal import FocalPointsError, load_focal_points
+
+from krizky_photos.focal import load_focal_points
 
 _log = logging.getLogger(__name__)
 
@@ -53,10 +53,7 @@ class PhotosPlugin:
             )
         cf_meta = json.loads(cf_meta_path.read_text(encoding="utf-8")) if cf_meta_path.exists() else {}
 
-        try:
-            self._focal_points = load_focal_points(photos_cfg, config_dir, sources_output)
-        except FocalPointsError as exc:
-            raise click.ClickException(str(exc)) from exc
+        self._focal_points = load_focal_points(photos_cfg, config_dir, sources_output)
 
         env.globals["photos"] = PhotoContext(
             cf_meta=cf_meta,

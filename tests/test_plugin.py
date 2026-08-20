@@ -75,8 +75,8 @@ def test_prepare_jinja2_environment_loads_focal_points(tmp_path):
 
 
 def test_prepare_jinja2_environment_missing_explicit_focal_points_raises(tmp_path):
-    """Explicitní cesta k chybějícímu souboru → ClickException."""
-    import click
+    """Explicitní cesta k chybějícímu souboru → FocalPointsError."""
+    from krizky_photos.focal import FocalPointsError
 
     config = {
         "sources": {
@@ -93,5 +93,5 @@ def test_prepare_jinja2_environment_missing_explicit_focal_points_raises(tmp_pat
         globals: dict = {}
 
     plugin = PhotosPlugin()
-    with pytest.raises(click.ClickException, match="focal_points file not found"):
+    with pytest.raises(FocalPointsError, match="focal_points file not found"):
         plugin.prepare_jinja2_environment(_Env(), config, tmp_path)
