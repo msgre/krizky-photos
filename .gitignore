@@ -6,3 +6,7 @@ __pycache__/
 .pytest_cache/
 temp/
 PLAN.md
+TODO.md
+.verify-logs/
+.claude/worktrees/
+.claude/settings.local.json

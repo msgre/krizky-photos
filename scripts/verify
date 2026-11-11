@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Jediná brána „hotovo“: Python (ruff, pytest).
+# Na obrazovku jen souhrn; plné výstupy v .verify-logs/. Exit 0 = vše prošlo.
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)" || exit 2
+
+LOG_DIR=.verify-logs
+rm -rf "$LOG_DIR" && mkdir -p "$LOG_DIR"
+failed=0
+
+run() {
+  local name=$1
+  shift
+  local log="$LOG_DIR/$name.log"
+  if "$@" >"$log" 2>&1; then
+    printf '✓ %s\n' "$name"
+  else
+    printf '✗ %s  (celý výstup: %s)\n' "$name" "$log"
+    tail -n 20 "$log" | sed 's/^/    /'
+    failed=1
+  fi
+}
+
+run uv-sync uv sync --frozen --quiet
+run ruff-check uv run --frozen ruff check .
+run ruff-format uv run --frozen ruff format --check .
+run pytest uv run --frozen pytest -q
+
+exit "$failed"
