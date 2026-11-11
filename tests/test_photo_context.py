@@ -1,7 +1,5 @@
 """Tests for krizky.photo_context — PhotoContext."""
 
-from __future__ import annotations
-
 from krizky_photos.context import PhotoContext
 
 # ---------------------------------------------------------------------------

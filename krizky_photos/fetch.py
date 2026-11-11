@@ -1,7 +1,5 @@
 """Google Drive photo metadata fetching for krizky-photos."""
 
-from __future__ import annotations
-
 import json
 import re
 from pathlib import Path
@@ -64,11 +62,11 @@ def fetch_gdrive_metadata(config: dict, config_dir: Path) -> list[dict]:
     """
     try:
         from googleapiclient.discovery import build as _build
-    except ImportError:
+    except ImportError as err:
         raise FetchError(
             "google-api-python-client and google-auth are required. "
             "Install with: pip install krizky-photos"
-        )
+        ) from err
 
     photos_cfg = config.get("sources", {}).get("photos")
     if not photos_cfg:

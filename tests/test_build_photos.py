@@ -1,7 +1,5 @@
 """Tests for krizky.build_photos — pure helpers (no external API calls)."""
 
-from __future__ import annotations
-
 from krizky_photos.build import (
     _normalize_base_name,
     compare_photos,

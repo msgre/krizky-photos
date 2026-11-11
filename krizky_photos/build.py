@@ -3,8 +3,6 @@
 Requires optional dependencies: pip install krizky[photos]
 """
 
-from __future__ import annotations
-
 import json
 import logging
 import re
@@ -81,11 +79,10 @@ def compare_photos(
             to_process.append(entry)
             continue
         cf_last_modified = cf_entry.get("_last_modified")
-        if cf_last_modified is not None:
-            # We know when this photo was last processed; compare timestamps.
-            if entry.get("last_modified") != cf_last_modified:
-                to_process.append(entry)
-                continue
+        # We know when this photo was last processed; compare timestamps.
+        if cf_last_modified is not None and entry.get("last_modified") != cf_last_modified:
+            to_process.append(entry)
+            continue
         # Check that all expected size variants are present.
         cf_sizes = {k for k in cf_entry if not k.startswith("_")}
         if not expected_sizes.issubset(cf_sizes):
@@ -104,30 +101,30 @@ def compare_photos(
 def _require_pillow():
     try:
         from PIL import Image, ImageOps  # noqa: F401
-    except ImportError:
+    except ImportError as err:
         raise PhotoError(
             "Pillow is required for photo processing. Install with: pip install krizky[photos]"
-        )
+        ) from err
 
 
 def _require_google():
     try:
         import google.oauth2  # noqa: F401
         import googleapiclient  # noqa: F401
-    except ImportError:
+    except ImportError as err:
         raise PhotoError(
             "google-api-python-client and google-auth are required. "
             "Install with: pip install krizky[photos]"
-        )
+        ) from err
 
 
 def _require_boto3():
     try:
         import boto3  # noqa: F401
-    except ImportError:
+    except ImportError as err:
         raise PhotoError(
             "boto3 is required for Cloudflare R2 upload. Install with: pip install krizky[photos]"
-        )
+        ) from err
 
 
 def _get_drive_service(photos_cfg: dict, config_dir: Path):
@@ -285,7 +282,6 @@ def _process_photo(
             img = img.convert("RGB")
 
         dims: dict = {"_last_modified": entry["last_modified"]}
-        fmt_names = [f["format"] for f in formats]
 
         for size_cfg in sizes:
             size_name = size_cfg["name"]

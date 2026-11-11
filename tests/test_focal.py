@@ -1,7 +1,5 @@
 """Tests for krizky_photos.focal — loading and normalization of focal_points.json."""
 
-from __future__ import annotations
-
 import json
 import logging
 

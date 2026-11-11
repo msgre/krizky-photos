@@ -5,8 +5,6 @@ e.g. ``{"007": "50% 46%"}``. Keys must be base names without extension; legacy
 files with keys like ``"005.jpg"`` are still accepted with a warning.
 """
 
-from __future__ import annotations
-
 import json
 import logging
 from pathlib import Path
