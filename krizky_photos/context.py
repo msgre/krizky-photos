@@ -6,8 +6,6 @@ a callable ``PhotoContext`` that templates use as ``photos(row_number)``.
 No external dependencies — works purely from the committed JSON metadata.
 """
 
-from __future__ import annotations
-
 
 class PhotoContext:
     """Callable that returns photo data for a given row number.
@@ -118,7 +116,7 @@ class PhotoContext:
         sources: list[dict] = []
         jpg_parts: list[str] = []
 
-        all_formats = self._source_formats + [{"format": "jpg", "mime": "image/jpeg"}]
+        all_formats = [*self._source_formats, {"format": "jpg", "mime": "image/jpeg"}]
         for fmt_cfg in all_formats:
             fmt = fmt_cfg["format"]
             parts: list[str] = []
@@ -136,10 +134,10 @@ class PhotoContext:
 
         return {
             "base_name": base_name,
-            "sources": sources,                         # list of {mime, srcset} for <source>
-            "srcset": ", ".join(jpg_parts),             # JPEG srcset for <img>
+            "sources": sources,  # list of {mime, srcset} for <source>
+            "srcset": ", ".join(jpg_parts),  # JPEG srcset for <img>
             "src": f"{self._base_url}/{base_name}_{largest_name}.jpg",
-            "variants": variants,                       # {size_name: {url, w, h}}
+            "variants": variants,  # {size_name: {url, w, h}}
             "width": largest["w"],
             "height": largest["h"],
             "focal_point": self._focal_points.get(base_name),

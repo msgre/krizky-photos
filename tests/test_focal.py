@@ -1,7 +1,5 @@
 """Tests for krizky_photos.focal — loading and normalization of focal_points.json."""
 
-from __future__ import annotations
-
 import json
 import logging
 
@@ -9,15 +7,15 @@ import pytest
 
 from krizky_photos.focal import (
     FocalPointsError,
+    _normalize,
     load_focal_points,
     resolve_focal_points_path,
-    _normalize,
 )
-
 
 # ---------------------------------------------------------------------------
 # resolve_focal_points_path
 # ---------------------------------------------------------------------------
+
 
 def test_resolve_default_path(tmp_path):
     photos_cfg: dict = {}
@@ -47,6 +45,7 @@ def test_resolve_explicit_path_absolute(tmp_path):
 # load_focal_points — default path behavior
 # ---------------------------------------------------------------------------
 
+
 def test_load_default_missing_returns_empty_with_warning(tmp_path, caplog):
     photos_cfg: dict = {}
     sources_output = tmp_path / "sources"
@@ -69,6 +68,7 @@ def test_load_default_present(tmp_path):
 # load_focal_points — explicit path behavior
 # ---------------------------------------------------------------------------
 
+
 def test_load_explicit_missing_raises(tmp_path):
     photos_cfg = {"focal_points": "data/does_not_exist.json"}
     with pytest.raises(FocalPointsError, match="focal_points file not found"):
@@ -78,7 +78,9 @@ def test_load_explicit_missing_raises(tmp_path):
 def test_load_explicit_present(tmp_path):
     fp_dir = tmp_path / "data"
     fp_dir.mkdir()
-    (fp_dir / "fp.json").write_text(json.dumps({"007": "50% 46%", "008": "30% 20%"}), encoding="utf-8")
+    (fp_dir / "fp.json").write_text(
+        json.dumps({"007": "50% 46%", "008": "30% 20%"}), encoding="utf-8"
+    )
     photos_cfg = {"focal_points": "data/fp.json"}
     result = load_focal_points(photos_cfg, tmp_path, tmp_path / "sources")
     assert result == {"007": "50% 46%", "008": "30% 20%"}
@@ -105,6 +107,7 @@ def test_load_explicit_non_dict_raises(tmp_path):
 # ---------------------------------------------------------------------------
 # _normalize — legacy keys + duplicates
 # ---------------------------------------------------------------------------
+
 
 def test_normalize_strips_extension():
     result = _normalize({"047.jpg": "30% 70%"}, "unused")

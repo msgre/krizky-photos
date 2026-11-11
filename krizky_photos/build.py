@@ -3,8 +3,6 @@
 Requires optional dependencies: pip install krizky[photos]
 """
 
-from __future__ import annotations
-
 import json
 import logging
 import re
@@ -25,6 +23,7 @@ class PhotoError(Exception):
 # ---------------------------------------------------------------------------
 # Pure helpers (no external deps)
 # ---------------------------------------------------------------------------
+
 
 def resolve_quality(size_cfg: dict, fmt_name: str, fmt_cfg: dict) -> int:
     """Resolve JPEG/WebP/AVIF quality for one size × format combination.
@@ -80,11 +79,10 @@ def compare_photos(
             to_process.append(entry)
             continue
         cf_last_modified = cf_entry.get("_last_modified")
-        if cf_last_modified is not None:
-            # We know when this photo was last processed; compare timestamps.
-            if entry.get("last_modified") != cf_last_modified:
-                to_process.append(entry)
-                continue
+        # We know when this photo was last processed; compare timestamps.
+        if cf_last_modified is not None and entry.get("last_modified") != cf_last_modified:
+            to_process.append(entry)
+            continue
         # Check that all expected size variants are present.
         cf_sizes = {k for k in cf_entry if not k.startswith("_")}
         if not expected_sizes.issubset(cf_sizes):
@@ -99,40 +97,40 @@ def compare_photos(
 # External-dependency helpers (lazy imports)
 # ---------------------------------------------------------------------------
 
+
 def _require_pillow():
     try:
         from PIL import Image, ImageOps  # noqa: F401
-    except ImportError:
+    except ImportError as err:
         raise PhotoError(
-            "Pillow is required for photo processing. "
-            "Install with: pip install krizky[photos]"
-        )
+            "Pillow is required for photo processing. Install with: pip install krizky[photos]"
+        ) from err
 
 
 def _require_google():
     try:
-        import googleapiclient  # noqa: F401
         import google.oauth2  # noqa: F401
-    except ImportError:
+        import googleapiclient  # noqa: F401
+    except ImportError as err:
         raise PhotoError(
             "google-api-python-client and google-auth are required. "
             "Install with: pip install krizky[photos]"
-        )
+        ) from err
 
 
 def _require_boto3():
     try:
         import boto3  # noqa: F401
-    except ImportError:
+    except ImportError as err:
         raise PhotoError(
-            "boto3 is required for Cloudflare R2 upload. "
-            "Install with: pip install krizky[photos]"
-        )
+            "boto3 is required for Cloudflare R2 upload. Install with: pip install krizky[photos]"
+        ) from err
 
 
 def _get_drive_service(photos_cfg: dict, config_dir: Path):
     _require_google()
     from googleapiclient.discovery import build
+
     from krizky_photos.fetch import _resolve_gdrive_credentials
 
     account_key: str = photos_cfg["source"]["account_key"]
@@ -163,6 +161,7 @@ def _get_r2_client(photos_cfg: dict):
 
 def _download_drive_file(service, file_id: str, dest: Path) -> None:
     import io
+
     from googleapiclient.http import MediaIoBaseDownload
 
     request = service.files().get_media(fileId=file_id, supportsAllDrives=True)
@@ -181,7 +180,8 @@ def _run_optimizer(optimizer: str, path: Path, quality: int) -> None:
         tmp = path.with_suffix(".tmp.jpg")
         subprocess.run(
             f'djpeg "{path}" | cjpeg -quality {quality} -progressive -optimize -outfile "{tmp}"',
-            shell=True, check=True,
+            shell=True,
+            check=True,
         )
         tmp.replace(path)
     elif optimizer == "jpegoptim":
@@ -228,13 +228,15 @@ def _check_optimizers(photos_cfg: dict) -> None:
         if optimizer and not shutil.which(optimizer):
             _log.warning(
                 "Optimizer %r configured for format %r but not found in PATH — skipping",
-                optimizer, fmt_cfg["format"],
+                optimizer,
+                fmt_cfg["format"],
             )
 
 
 # ---------------------------------------------------------------------------
 # Core processing
 # ---------------------------------------------------------------------------
+
 
 def _process_photo(
     entry: dict,
@@ -280,7 +282,6 @@ def _process_photo(
             img = img.convert("RGB")
 
         dims: dict = {"_last_modified": entry["last_modified"]}
-        fmt_names = [f["format"] for f in formats]
 
         for size_cfg in sizes:
             size_name = size_cfg["name"]
@@ -320,6 +321,7 @@ def _process_photo(
 # Orchestration
 # ---------------------------------------------------------------------------
 
+
 def build_photos(
     config: dict,
     config_dir: Path,
@@ -351,11 +353,11 @@ def build_photos(
 
     gdrive_meta: list[dict] = (
         json.loads(gdrive_meta_path.read_text(encoding="utf-8"))
-        if gdrive_meta_path.exists() else []
+        if gdrive_meta_path.exists()
+        else []
     )
     cf_meta: dict = (
-        json.loads(cf_meta_path.read_text(encoding="utf-8"))
-        if cf_meta_path.exists() else {}
+        json.loads(cf_meta_path.read_text(encoding="utf-8")) if cf_meta_path.exists() else {}
     )
 
     if force:
@@ -384,8 +386,14 @@ def build_photos(
             base = _normalize_base_name(entry["title"], entry["row_number"])
             try:
                 result = _process_photo(
-                    entry, service, photos_cfg, cf_client, work_dir, dry_run,
-                    index=idx, total=n_process,
+                    entry,
+                    service,
+                    photos_cfg,
+                    cf_client,
+                    work_dir,
+                    dry_run,
+                    index=idx,
+                    total=n_process,
                 )
                 if not dry_run and result:
                     cf_meta[base] = result
@@ -397,7 +405,9 @@ def build_photos(
             click.echo(f"  mazání {base}...")
             if not dry_run and cf_client:
                 try:
-                    _delete_from_r2(cf_client, photos_cfg["destination"]["bucket"], base, photos_cfg)
+                    _delete_from_r2(
+                        cf_client, photos_cfg["destination"]["bucket"], base, photos_cfg
+                    )
                     cf_meta.pop(base, None)
                 except Exception as exc:
                     click.echo(click.style(f"  CHYBA mazání {base}: {exc}", fg="red"))
@@ -405,7 +415,5 @@ def build_photos(
 
     if not dry_run:
         photos_dir.mkdir(parents=True, exist_ok=True)
-        cf_meta_path.write_text(
-            json.dumps(cf_meta, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        cf_meta_path.write_text(json.dumps(cf_meta, ensure_ascii=False, indent=2), encoding="utf-8")
         click.echo(click.style(f"Hotovo: {n_process} zpracováno, {n_delete} smazáno.", fg="green"))

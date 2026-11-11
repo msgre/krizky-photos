@@ -1,7 +1,5 @@
 """Tests for krizky_photos.plugin — inject_head focal_points wiring."""
 
-from __future__ import annotations
-
 import json
 
 import pytest
@@ -22,7 +20,7 @@ def test_inject_head_emits_focal_points_when_loaded():
     assert html.startswith("<script>window.krizkyPhotos=")
     assert html.endswith("</script>")
     # Extract JSON payload and verify structure.
-    payload = html[len("<script>window.krizkyPhotos="):-len(";</script>")]
+    payload = html[len("<script>window.krizkyPhotos=") : -len(";</script>")]
     data = json.loads(payload)
     assert data == {"focalPoints": {"007": "50% 46%", "008": "30% 20%"}}
 
@@ -33,7 +31,8 @@ def test_prepare_jinja2_environment_no_photos_section_clears_state(tmp_path):
     plugin._focal_points = {"stale": "50% 50%"}
 
     class _Env:
-        globals: dict = {}
+        def __init__(self):
+            self.globals: dict = {}
 
     env = _Env()
     plugin.prepare_jinja2_environment(env, {"sources": {}}, tmp_path)
@@ -60,7 +59,8 @@ def test_prepare_jinja2_environment_loads_focal_points(tmp_path):
     }
 
     class _Env:
-        globals: dict = {}
+        def __init__(self):
+            self.globals: dict = {}
 
     env = _Env()
     plugin = PhotosPlugin()
@@ -90,7 +90,8 @@ def test_prepare_jinja2_environment_missing_explicit_focal_points_raises(tmp_pat
     }
 
     class _Env:
-        globals: dict = {}
+        def __init__(self):
+            self.globals: dict = {}
 
     plugin = PhotosPlugin()
     with pytest.raises(FocalPointsError, match="focal_points file not found"):
