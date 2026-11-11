@@ -89,25 +89,31 @@ def fetch_gdrive_metadata(config: dict, config_dir: Path) -> list[dict]:
     results: list[dict] = []
     page_token = None
     while True:
-        response = service.files().list(
-            q=f"'{folder_id}' in parents and trashed = false",
-            fields="nextPageToken, files(id, name, modifiedTime)",
-            pageToken=page_token,
-            supportsAllDrives=True,
-            includeItemsFromAllDrives=True,
-            pageSize=1000,
-        ).execute()
+        response = (
+            service.files()
+            .list(
+                q=f"'{folder_id}' in parents and trashed = false",
+                fields="nextPageToken, files(id, name, modifiedTime)",
+                pageToken=page_token,
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True,
+                pageSize=1000,
+            )
+            .execute()
+        )
 
         for f in response.get("files", []):
             row_number = _parse_row_number(f["name"])
             if row_number is None:
                 continue
-            results.append({
-                "title": f["name"],
-                "last_modified": f["modifiedTime"],
-                "file_id": f["id"],
-                "row_number": row_number,
-            })
+            results.append(
+                {
+                    "title": f["name"],
+                    "last_modified": f["modifiedTime"],
+                    "file_id": f["id"],
+                    "row_number": row_number,
+                }
+            )
 
         page_token = response.get("nextPageToken")
         if not page_token:

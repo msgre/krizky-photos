@@ -51,7 +51,9 @@ class PhotosPlugin:
                 "Photo metadata not found: %s — run 'krizky build photos' first",
                 cf_meta_path,
             )
-        cf_meta = json.loads(cf_meta_path.read_text(encoding="utf-8")) if cf_meta_path.exists() else {}
+        cf_meta = (
+            json.loads(cf_meta_path.read_text(encoding="utf-8")) if cf_meta_path.exists() else {}
+        )
 
         self._focal_points = load_focal_points(photos_cfg, config_dir, sources_output)
 
@@ -78,7 +80,7 @@ class PhotosPlugin:
         if not self._focal_points:
             return None
         payload = json.dumps({"focalPoints": self._focal_points}, ensure_ascii=False)
-        return f'<script>window.krizkyPhotos={payload};</script>'
+        return f"<script>window.krizkyPhotos={payload};</script>"
 
     # ------------------------------------------------------------------
     # register_commands
@@ -101,6 +103,7 @@ class PhotosPlugin:
                 raise SystemExit(1) from None
 
             from krizky_photos.fetch import FetchError, fetch_gdrive_metadata
+
             try:
                 click.echo("Fetching Google Drive photo metadata...")
                 meta = fetch_gdrive_metadata(config, config_dir=Path(config_path).parent)
@@ -110,8 +113,18 @@ class PhotosPlugin:
                 raise SystemExit(1) from None
 
         @cli.command("build-photos")
-        @click.option("--force", is_flag=True, default=False, help="Reprocess all photos, ignore change detection.")
-        @click.option("--dry-run", is_flag=True, default=False, help="Show what would happen without downloading or uploading.")
+        @click.option(
+            "--force",
+            is_flag=True,
+            default=False,
+            help="Reprocess all photos, ignore change detection.",
+        )
+        @click.option(
+            "--dry-run",
+            is_flag=True,
+            default=False,
+            help="Show what would happen without downloading or uploading.",
+        )
         @click.pass_context
         def _build_photos(ctx: click.Context, force: bool, dry_run: bool) -> None:
             """Process changed photos and upload variants to Cloudflare R2."""
@@ -123,9 +136,12 @@ class PhotosPlugin:
                 raise SystemExit(1) from None
 
             from krizky_photos.build import PhotoError, build_photos
+
             try:
                 click.echo("Building photos...")
-                build_photos(config, config_dir=Path(config_path).parent, force=force, dry_run=dry_run)
+                build_photos(
+                    config, config_dir=Path(config_path).parent, force=force, dry_run=dry_run
+                )
                 click.echo(click.style("OK: Photos processed successfully.", fg="green"))
             except PhotoError as exc:
                 click.echo(click.style(f"ERROR: {exc}", fg="red"))
@@ -137,6 +153,7 @@ class PhotosPlugin:
         build_group = cli.commands.get("build")
 
         if fetch_group is not None:
+
             @fetch_group.command("photos")
             @click.pass_context
             def _fetch_photos_sub(ctx: click.Context) -> None:
@@ -144,6 +161,7 @@ class PhotosPlugin:
                 ctx.invoke(_fetch_photos)
 
         if build_group is not None:
+
             @build_group.command("photos")
             @click.option("--force", is_flag=True, default=False)
             @click.option("--dry-run", is_flag=True, default=False)

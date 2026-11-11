@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from krizky_photos.build import (
     _normalize_base_name,
     compare_photos,
@@ -11,10 +9,10 @@ from krizky_photos.build import (
 )
 from krizky_photos.fetch import _parse_row_number
 
-
 # ---------------------------------------------------------------------------
 # resolve_quality
 # ---------------------------------------------------------------------------
+
 
 def test_resolve_quality_size_wins():
     size_cfg = {"name": "micro", "quality": {"jpg": 82, "avif": 52}}
@@ -52,6 +50,7 @@ def test_resolve_quality_non_dict_size_quality():
 # _parse_row_number
 # ---------------------------------------------------------------------------
 
+
 def test_parse_row_number_simple():
     assert _parse_row_number("007.JPG") == 7
 
@@ -71,6 +70,7 @@ def test_parse_row_number_directory():
 # ---------------------------------------------------------------------------
 # _normalize_base_name
 # ---------------------------------------------------------------------------
+
 
 def test_normalize_base_name_primary():
     assert _normalize_base_name("007.JPG", 7) == "007"
@@ -100,7 +100,9 @@ def test_normalize_base_name_uppercase():
 PHOTOS_CFG = {"sizes": [{"name": "thumb"}, {"name": "big"}]}
 
 
-def _entry(title: str, row: int, last_modified: str = "2026-01-01T00:00:00Z", file_id: str = "abc") -> dict:
+def _entry(
+    title: str, row: int, last_modified: str = "2026-01-01T00:00:00Z", file_id: str = "abc"
+) -> dict:
     return {"title": title, "row_number": row, "last_modified": last_modified, "file_id": file_id}
 
 
@@ -113,7 +115,13 @@ def test_compare_new_photo():
 
 def test_compare_unchanged_photo():
     gdrive = [_entry("007.jpg", 7, "2026-01-01T00:00:00Z")]
-    cf = {"007": {"_last_modified": "2026-01-01T00:00:00Z", "thumb": {"w": 330, "h": 220}, "big": {"w": 1600, "h": 1067}}}
+    cf = {
+        "007": {
+            "_last_modified": "2026-01-01T00:00:00Z",
+            "thumb": {"w": 330, "h": 220},
+            "big": {"w": 1600, "h": 1067},
+        }
+    }
     result = compare_photos(gdrive, cf, PHOTOS_CFG)
     assert result["to_process"] == []
     assert result["to_delete"] == []
@@ -121,7 +129,13 @@ def test_compare_unchanged_photo():
 
 def test_compare_changed_photo():
     gdrive = [_entry("007.jpg", 7, "2026-07-01T00:00:00Z")]
-    cf = {"007": {"_last_modified": "2026-01-01T00:00:00Z", "thumb": {"w": 330, "h": 220}, "big": {"w": 1600, "h": 1067}}}
+    cf = {
+        "007": {
+            "_last_modified": "2026-01-01T00:00:00Z",
+            "thumb": {"w": 330, "h": 220},
+            "big": {"w": 1600, "h": 1067},
+        }
+    }
     result = compare_photos(gdrive, cf, PHOTOS_CFG)
     assert len(result["to_process"]) == 1
 
@@ -129,7 +143,9 @@ def test_compare_changed_photo():
 def test_compare_missing_variant():
     """CF má fotku, ale chybí varianta → reprocess."""
     gdrive = [_entry("007.jpg", 7, "2026-01-01T00:00:00Z")]
-    cf = {"007": {"_last_modified": "2026-01-01T00:00:00Z", "thumb": {"w": 330, "h": 220}}}  # big chybí
+    cf = {
+        "007": {"_last_modified": "2026-01-01T00:00:00Z", "thumb": {"w": 330, "h": 220}}
+    }  # big chybí
     result = compare_photos(gdrive, cf, PHOTOS_CFG)
     assert len(result["to_process"]) == 1
 
@@ -146,12 +162,20 @@ def test_compare_mixed():
     gdrive = [
         _entry("007.jpg", 7, "2026-01-01T00:00:00Z"),  # unchanged
         _entry("008.jpg", 8, "2026-07-01T00:00:00Z"),  # changed
-        _entry("009.jpg", 9),                          # new
+        _entry("009.jpg", 9),  # new
     ]
     cf = {
-        "007": {"_last_modified": "2026-01-01T00:00:00Z", "thumb": {"w": 330, "h": 220}, "big": {"w": 1600, "h": 1067}},
-        "008": {"_last_modified": "2026-01-01T00:00:00Z", "thumb": {"w": 330, "h": 220}, "big": {"w": 1600, "h": 1067}},
-        "010": {"thumb": {"w": 330, "h": 220}},        # smazaná fotka
+        "007": {
+            "_last_modified": "2026-01-01T00:00:00Z",
+            "thumb": {"w": 330, "h": 220},
+            "big": {"w": 1600, "h": 1067},
+        },
+        "008": {
+            "_last_modified": "2026-01-01T00:00:00Z",
+            "thumb": {"w": 330, "h": 220},
+            "big": {"w": 1600, "h": 1067},
+        },
+        "010": {"thumb": {"w": 330, "h": 220}},  # smazaná fotka
     }
     result = compare_photos(gdrive, cf, PHOTOS_CFG)
     assert len(result["to_process"]) == 2  # 008 a 009
@@ -189,7 +213,13 @@ def test_compare_duplicate_entries_last_wins():
         _entry("007.jpg", 7, "2026-01-01T00:00:00Z", "file_id_old"),
         _entry("007.jpg", 7, "2026-07-01T00:00:00Z", "file_id_new"),  # přepíše předchozí
     ]
-    cf = {"007": {"_last_modified": "2026-01-01T00:00:00Z", "thumb": {"w": 330, "h": 220}, "big": {"w": 1600, "h": 1067}}}
+    cf = {
+        "007": {
+            "_last_modified": "2026-01-01T00:00:00Z",
+            "thumb": {"w": 330, "h": 220},
+            "big": {"w": 1600, "h": 1067},
+        }
+    }
     result = compare_photos(gdrive, cf, PHOTOS_CFG)
     # last_modified se liší → reprocess
     assert len(result["to_process"]) == 1

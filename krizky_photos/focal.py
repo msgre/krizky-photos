@@ -62,8 +62,7 @@ def load_focal_points(
     if not path.exists():
         if explicit:
             raise FocalPointsError(
-                f"focal_points file not found: {path} "
-                "(configured via sources.photos.focal_points)"
+                f"focal_points file not found: {path} (configured via sources.photos.focal_points)"
             )
         _log.warning(
             "Focal points file not found: %s — focal_point will be None for all photos",
@@ -110,7 +109,9 @@ def _normalize(raw: dict, path: Path) -> dict:
         _log.warning(
             "Focal points keys with file extensions (legacy format) in %s: %s%s — "
             "rename to base name without extension (e.g. '007' instead of '007.jpg')",
-            path, sample, more,
+            path,
+            sample,
+            more,
         )
 
     if duplicates:
@@ -118,7 +119,9 @@ def _normalize(raw: dict, path: Path) -> dict:
         more = f" (and {len(duplicates) - 5} more)" if len(duplicates) > 5 else ""
         _log.warning(
             "Duplicate focal points keys after normalization in %s: %s%s — last value wins",
-            path, sample, more,
+            path,
+            sample,
+            more,
         )
 
     return normalized

@@ -22,7 +22,7 @@ def test_inject_head_emits_focal_points_when_loaded():
     assert html.startswith("<script>window.krizkyPhotos=")
     assert html.endswith("</script>")
     # Extract JSON payload and verify structure.
-    payload = html[len("<script>window.krizkyPhotos="):-len(";</script>")]
+    payload = html[len("<script>window.krizkyPhotos=") : -len(";</script>")]
     data = json.loads(payload)
     assert data == {"focalPoints": {"007": "50% 46%", "008": "30% 20%"}}
 

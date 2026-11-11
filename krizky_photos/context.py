@@ -136,10 +136,10 @@ class PhotoContext:
 
         return {
             "base_name": base_name,
-            "sources": sources,                         # list of {mime, srcset} for <source>
-            "srcset": ", ".join(jpg_parts),             # JPEG srcset for <img>
+            "sources": sources,  # list of {mime, srcset} for <source>
+            "srcset": ", ".join(jpg_parts),  # JPEG srcset for <img>
             "src": f"{self._base_url}/{base_name}_{largest_name}.jpg",
-            "variants": variants,                       # {size_name: {url, w, h}}
+            "variants": variants,  # {size_name: {url, w, h}}
             "width": largest["w"],
             "height": largest["h"],
             "focal_point": self._focal_points.get(base_name),

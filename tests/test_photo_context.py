@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
 from krizky_photos.context import PhotoContext
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -14,13 +11,13 @@ from krizky_photos.context import PhotoContext
 FORMATS = [
     {"format": "avif", "mime": "image/avif", "quality": 60},
     {"format": "webp", "mime": "image/webp", "quality": 80},
-    {"format": "jpg",  "mime": "image/jpeg", "quality": 85},
+    {"format": "jpg", "mime": "image/jpeg", "quality": 85},
 ]
 
 SIZES = [
-    {"name": "micro",  "max_width": 150},
-    {"name": "thumb",  "max_width": 330},
-    {"name": "big",    "max_width": 1600},
+    {"name": "micro", "max_width": 150},
+    {"name": "thumb", "max_width": 330},
+    {"name": "big", "max_width": 1600},
 ]
 
 BASE_URL = "https://cdn.example.com"
@@ -34,6 +31,7 @@ def _ctx(cf_meta: dict, focal_points: dict | None = None) -> PhotoContext:
 # has_photos / counts
 # ---------------------------------------------------------------------------
 
+
 def test_no_photos_for_row():
     ctx = _ctx({})
     result = ctx(42)
@@ -45,7 +43,13 @@ def test_no_photos_for_row():
 
 
 def test_primary_only():
-    cf = {"042": {"micro": {"w": 150, "h": 100}, "thumb": {"w": 330, "h": 220}, "big": {"w": 1600, "h": 1067}}}
+    cf = {
+        "042": {
+            "micro": {"w": 150, "h": 100},
+            "thumb": {"w": 330, "h": 220},
+            "big": {"w": 1600, "h": 1067},
+        }
+    }
     result = _ctx(cf)(42)
     assert result["has_photos"] is True
     assert result["primary"] is not None
@@ -71,7 +75,7 @@ def test_additional_stops_at_gap():
     """Pokud chybí 007-1, nehledá dál (007-2 se ignoruje)."""
     cf = {
         "007": {"big": {"w": 1600, "h": 1200}},
-        "007-2": {"big": {"w": 800, "h": 600}},   # 007-1 chybí → stop
+        "007-2": {"big": {"w": 800, "h": 600}},  # 007-1 chybí → stop
     }
     result = _ctx(cf)(7)
     assert result["count"] == 1
@@ -80,6 +84,7 @@ def test_additional_stops_at_gap():
 # ---------------------------------------------------------------------------
 # photo_dict structure
 # ---------------------------------------------------------------------------
+
 
 def test_photo_dict_base_name():
     cf = {"007": {"big": {"w": 1600, "h": 1200}}}
