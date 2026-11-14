@@ -2,7 +2,7 @@
 id: "01"
 slug: core-helpers
 title: Core 0.2, resolve_path pro focal points a přejmenování na PhotosFetchError
-status: pending
+status: done
 depends_on: []
 files:
   - pyproject.toml
@@ -13,8 +13,8 @@ files:
   - tests/test_focal.py
   - tests/test_fetch.py
   - README.md
-attempts: 0
-pr: ""
+attempts: 1
+pr: "2"
 ---
 
 ## Cíl
