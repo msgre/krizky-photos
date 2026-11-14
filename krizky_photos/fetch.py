@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 
-class FetchError(Exception):
+class PhotosFetchError(Exception):
     """Raised when fetching Google Drive metadata fails."""
 
 
@@ -58,19 +58,19 @@ def fetch_gdrive_metadata(config: dict, config_dir: Path) -> list[dict]:
         file_id, row_number.
 
     Raises:
-        FetchError: If Google Drive access fails or optional deps are missing.
+        PhotosFetchError: If Google Drive access fails or optional deps are missing.
     """
     try:
         from googleapiclient.discovery import build as _build
     except ImportError as err:
-        raise FetchError(
+        raise PhotosFetchError(
             "google-api-python-client and google-auth are required. "
             "Install with: pip install krizky-photos"
         ) from err
 
     photos_cfg = config.get("sources", {}).get("photos")
     if not photos_cfg:
-        raise FetchError("No 'sources.photos' section found in config")
+        raise PhotosFetchError("No 'sources.photos' section found in config")
 
     source_cfg = photos_cfg["source"]
     folder_id: str = source_cfg["folder_id"]
@@ -80,7 +80,7 @@ def fetch_gdrive_metadata(config: dict, config_dir: Path) -> list[dict]:
     try:
         creds = _resolve_gdrive_credentials(account_key, config_dir, scopes)
     except ValueError as exc:
-        raise FetchError(str(exc)) from exc
+        raise PhotosFetchError(str(exc)) from exc
 
     service = _build("drive", "v3", credentials=creds)
 

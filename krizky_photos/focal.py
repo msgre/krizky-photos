@@ -9,6 +9,8 @@ import json
 import logging
 from pathlib import Path
 
+from krizky.plugin_helpers import resolve_path
+
 _log = logging.getLogger(__name__)
 
 _DEFAULT_RELATIVE_PATH = Path("photos") / "focal_points.json"
@@ -26,7 +28,8 @@ def resolve_focal_points_path(
     """Return ``(path, explicit)`` for the focal_points JSON file.
 
     Priority:
-      1. ``sources.photos.focal_points`` in the config — relative to ``config_dir``.
+      1. ``sources.photos.focal_points`` in the config — relative to ``config_dir``;
+         an absolute path is used as is.
       2. Default ``<sources_output>/photos/focal_points.json``.
 
     ``explicit`` is True when the path came from the config (user opt-in), which
@@ -34,7 +37,9 @@ def resolve_focal_points_path(
     """
     configured = photos_cfg.get("focal_points")
     if configured:
-        path = (config_dir / configured).resolve()
+        path = resolve_path(configured, config_dir)
+        if path is None:
+            raise FocalPointsError(f"Invalid sources.photos.focal_points: {configured!r}")
         return path, True
     return sources_output / _DEFAULT_RELATIVE_PATH, False
 

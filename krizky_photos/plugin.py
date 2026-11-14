@@ -100,13 +100,13 @@ class PhotosPlugin:
                 click.echo(click.style(f"ERROR: {exc.message}", fg="red"))
                 raise SystemExit(1) from None
 
-            from krizky_photos.fetch import FetchError, fetch_gdrive_metadata
+            from krizky_photos.fetch import PhotosFetchError, fetch_gdrive_metadata
 
             try:
                 click.echo("Fetching Google Drive photo metadata...")
                 meta = fetch_gdrive_metadata(config, config_dir=Path(config_path).parent)
                 click.echo(click.style(f"OK: Fetched metadata for {len(meta)} photos.", fg="green"))
-            except FetchError as exc:
+            except PhotosFetchError as exc:
                 click.echo(click.style(f"ERROR: {exc}", fg="red"))
                 raise SystemExit(1) from None
 

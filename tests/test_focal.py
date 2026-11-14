@@ -41,6 +41,16 @@ def test_resolve_explicit_path_absolute(tmp_path):
     assert explicit is True
 
 
+def test_resolve_absolute_path_ignores_unrelated_config_dir(tmp_path):
+    absolute = tmp_path / "elsewhere" / "fp.json"
+    config_dir = tmp_path / "unrelated" / "config"
+    path, explicit = resolve_focal_points_path(
+        {"focal_points": str(absolute)}, config_dir, tmp_path / "sources"
+    )
+    assert path == absolute
+    assert explicit is True
+
+
 # ---------------------------------------------------------------------------
 # load_focal_points — default path behavior
 # ---------------------------------------------------------------------------
